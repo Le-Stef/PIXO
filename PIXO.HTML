@@ -185,7 +185,7 @@
   }
   /* Barre d'outils Photoshop-style : étroite, icônes seules, info en tooltip */
   #sidebar {
-    width: 64px; background: var(--panel);
+    width: 64px; min-width: 64px; background: var(--panel);
     padding: 8px; display: flex; flex-direction: column;
     gap: 4px; border-right: 2px solid var(--accent);
     overflow-y: auto;
@@ -205,12 +205,37 @@
   /* Icones Phosphor : grandes pour cible cliquable confortable */
   .tool-btn i.ph { font-size: 26px; }
   .canvas-wrap {
-    flex: 1; display: flex; align-items: center;
-    justify-content: center; position: relative;
+    flex: 1; display: flex;
+    position: relative;
     background: var(--bg);
+    /* On garde la position relative pour ancrer le drop-overlay sur le viewport
+       visible : le scroll lui se fait dans .canvas-scroll en dessous. */
+  }
+  /* Conteneur de scroll : prend toute la place du wrap, centre l'icône quand
+     elle tient dans la vue, fait apparaître les scrollbars natives quand
+     l'icône zoomée déborde. Le mot-clé "safe" empêche le centrage de couper
+     le contenu côté origine et garantit que tout le contenu reste atteignable
+     via le scroll. */
+  .canvas-scroll {
+    flex: 1;
+    display: flex;
+    align-items: safe center;
+    justify-content: safe center;
+    overflow: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* On enveloppe le canvas et ses overlays dans une scène positionnée :
+     elle a la même taille que le canvas, sert de référentiel aux overlays
+     en position absolue, et flex-shrink:0 empêche le scroll container de
+     la comprimer en dessous de la taille zoomée. */
+  .canvas-stage {
+    position: relative;
+    flex-shrink: 0;
   }
   /* On cible uniquement le canvas de dessin pour ne pas que la grille hérite du fond opaque */
   #canvas {
+    display: block;
     image-rendering: pixelated;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     cursor: crosshair;
@@ -234,6 +259,7 @@
   body.tool-clone-blocked #canvas { cursor: not-allowed; }
   #gridOverlay {
     position: absolute;
+    top: 0; left: 0;
     pointer-events: none;
     background: transparent;
     image-rendering: auto;
@@ -244,6 +270,7 @@
      du contenu d'image, contrairement aux overlays grille/sélection. */
   #floatingOverlay {
     position: absolute;
+    top: 0; left: 0;
     pointer-events: none;
     background: transparent;
     image-rendering: pixelated;
@@ -252,6 +279,7 @@
   /* Overlay dédié à la sélection : "marching ants" au-dessus de la grille */
   #selectionOverlay {
     position: absolute;
+    top: 0; left: 0;
     pointer-events: none;
     background: transparent;
     image-rendering: auto;
@@ -260,6 +288,7 @@
   /* Overlay dédié au curseur du tampon : empreinte du pinceau et marqueur de source */
   #cursorOverlay {
     position: absolute;
+    top: 0; left: 0;
     pointer-events: none;
     background: transparent;
     image-rendering: auto;
@@ -1175,11 +1204,15 @@
     </div>
   </aside>
   <div class="canvas-wrap" id="dropZone">
-    <canvas id="canvas"></canvas>
-    <canvas id="floatingOverlay"></canvas>
-    <canvas id="gridOverlay"></canvas>
-    <canvas id="selectionOverlay"></canvas>
-    <canvas id="cursorOverlay"></canvas>
+    <div class="canvas-scroll">
+      <div class="canvas-stage">
+        <canvas id="canvas"></canvas>
+        <canvas id="floatingOverlay"></canvas>
+        <canvas id="gridOverlay"></canvas>
+        <canvas id="selectionOverlay"></canvas>
+        <canvas id="cursorOverlay"></canvas>
+      </div>
+    </div>
     <div id="drop-overlay"><span data-i18n="drop.title">Déposez l'image ici</span><br><small data-i18n="drop.sub">Au-delà de 64×64 : import avec grille</small></div>
   </div>
   <aside id="palette-panel">
